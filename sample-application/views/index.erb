@@ -1,0 +1,5 @@
+<h3>Page View Count: <%= @count %></h3>
+<h3> Instance ID : <%=@instance%> served <%=@visits_per_instance%> requests </h3>
+<form action="/refresh" method="POST">
+	<input type="submit" value="Refresh Count" />
+</form>
