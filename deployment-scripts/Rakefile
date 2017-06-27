@@ -1,6 +1,6 @@
 require 'rake'
 require 'cloudformation_stack'
-
+# bundle exec rake deploy:vpc[personal,ap-southeast-2,sample-vpc,../templates/vpc/cloudformation.json]
 namespace :deploy do
   desc 'Deploy cloudformation stack'
   task :vpc, [:aws_profile, :region, :stack_name, :cf_template] do |t, args|

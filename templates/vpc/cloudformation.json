@@ -5,7 +5,7 @@
     "VPCCIDR": {
       "Description": "CIDR block for network",
       "Type": "String",
-      "Default": "10.10.10.0/22"
+      "Default": "10.10.8.0/22"
     },
     "PublicSubnetsCIDR": {
       "Description": "CIDR blocks for public subnets",
@@ -131,34 +131,34 @@
         "RuleNumber": 300
       }
     },
-    "PublicNetworkACLEntryOutboundHTTP": {
+    "PublicNetworkACLEntryInboundEphemeralPorts": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": false,
+        "NetworkAclId": {"Ref" : "PublicSubnetNetworkAcl"},
+        "PortRange": {
+          "From": 1024,
+          "To": 65535
+        },
+        "Protocol": 6,
+        "RuleAction": "allow",
+        "RuleNumber": 400
+      }
+    },
+    "PublicNetworkACLEntryOutboundAllTraffic": {
       "Type": "AWS::EC2::NetworkAclEntry",
       "Properties": {
         "CidrBlock": "0.0.0.0/0",
         "Egress": true,
         "NetworkAclId": {"Ref": "PublicSubnetNetworkAcl"},
         "PortRange": {
-          "From": 80,
-          "To": 80
+          "From": 0,
+          "To": 65535
         },
         "Protocol": 6,
         "RuleAction": "allow",
         "RuleNumber": 100
-      }
-    },
-    "PublicNetworkACLEntryOutboundHTTPS": {
-      "Type": "AWS::EC2::NetworkAclEntry",
-      "Properties": {
-        "CidrBlock": "0.0.0.0/0",
-        "Egress": true,
-        "NetworkAclId": {"Ref":"PublicSubnetNetworkAcl"},
-        "PortRange": {
-          "From": 443,
-          "To": 443
-        },
-        "Protocol": 6,
-        "RuleAction": "allow",
-        "RuleNumber": 200
       }
     },
     "PublicSubnet1": {
