@@ -1,0 +1,17 @@
+require 'rake'
+require 'cloudformation_stack'
+
+namespace :deploy do
+  desc 'Deploy cloudformation stack'
+  task :vpc, [:aws_profile, :region, :stack_name, :cf_template] do |t, args|
+    disable_rollback =  true
+    timeout =  1800
+    File.read(args[:cf_template])
+    credentials = {
+      mode: 'aws_profile',
+      profile_name: args[:aws_profile]
+    }
+    cf_stack = CFStackService.new(args[:stack_name],File.read(args[:cf_template]),{},credentials, args[:region])
+    cf_stack.deploy(disable_rollback, timeout)
+  end
+end
