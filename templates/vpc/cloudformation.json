@@ -464,5 +464,40 @@
       "Value" :  { "Ref" : "PrivateSubnet3" },
       "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PrivateSubnetID-3" }}
     },
+    "VPCCIDR" : {
+      "Description" : "VPC CIDR",
+      "Value" :  { "Ref" : "VPCCIDR" },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-VPCCIDR" }}
+    },
+    "PublicSubnetCIDR1" : {
+      "Description" : "Public Subnet 1 CIDR Ranges",
+      "Value" :  { "Fn::Select" : [ "0", {"Ref" : "PublicSubnetsCIDR"} ] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PubCIDR1" }}
+    },
+    "PublicSubnetCIDR2" : {
+      "Description" : "Public Subnet 2 CIDR Ranges",
+      "Value" :  { "Fn::Select" : [ "1", {"Ref" : "PublicSubnetsCIDR"} ] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PubCIDR2" }}
+    },
+    "PublicSubnetCIDR3" : {
+      "Description" : "Public Subnet 3 CIDR Ranges",
+      "Value" :  { "Fn::Select" : [ "2", {"Ref" : "PublicSubnetsCIDR"} ] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PubCIDR3" }}
+    },
+    "PrivateSubnetCIDR1" : {
+      "Description" : "Private Subnet 1 CIDR Ranges",
+      "Value" :  { "Fn::Select" : [ "0", {"Ref" : "PrivateSubnetsCIDR"} ] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PrivateCIDR1" }}
+    },
+    "PrivateSubnetCIDR2" : {
+      "Description" : "Private Subnet 2 CIDR Ranges",
+      "Value" :  { "Fn::Select" : [ "1", {"Ref" : "PrivateSubnetsCIDR"} ] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PrivateCIDR2" }}
+    },
+    "PrivateSubnetCIDR1" : {
+      "Description" : "Private Subnet 3 CIDR Ranges",
+      "Value" :  { "Fn::Select" : [ "2", {"Ref" : "PrivateSubnetsCIDR"} ] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-PrivateCIDR3" }}
+    },
   }
 }
