@@ -466,7 +466,7 @@
     },
     "VPCCIDR" : {
       "Description" : "VPC CIDR",
-      "Value" :  { "Ref" : "VPCCIDR" },
+      "Value" :  { "Fn::GetAtt" : [ "VPC", "CidrBlock" ] },
       "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-VPCCIDR" }}
     },
     "PublicSubnetCIDR1" : {
