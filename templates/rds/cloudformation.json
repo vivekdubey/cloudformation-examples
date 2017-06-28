@@ -1,0 +1,105 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "PostgreSQL RDS Template ",
+  "Parameters" : {
+    "VPCStackName": {
+      "Description": "Stack Name to get VPC related info",
+      "Type": "String",
+      "Default": "sample-vpc"
+    },
+    "DBName": {
+      "Default": "development",
+      "Description" : "The database name",
+      "Type": "String"
+    },
+    "DBUsername": {
+      "Default": "development",
+      "NoEcho": "true",
+      "Description" : "The database admin account username",
+      "Type": "String"
+    },
+    "DBPassword": {
+      "NoEcho": "true",
+      "Description" : "The database admin account password",
+      "Type": "String"
+    },
+    "DBInstanceClass" : {
+      "Default" : "db.t2.micro",
+      "Description" : "Database instance class",
+      "Type" : "String",
+    },
+    "DBAllocatedStorage" : {
+      "Default": "5",
+      "Description" : "The size of the database (Gb)",
+      "Type": "Number"
+    }
+  },
+  "Resources" : {
+    "DBSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "Allowing access to RDS instance",
+        "VpcId" : { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCID" } },
+        "SecurityGroupIngress" : [{
+          "IpProtocol" : "tcp",
+          "FromPort" : 5432,
+          "ToPort" : 5432,
+          "CidrIp" : { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCCIDR" } }
+        }],
+        "SecurityGroupEgress" : [{
+          "IpProtocol" : "tcp",
+          "FromPort" : 5432,
+          "ToPort" : 5432,
+          "CidrIp" : { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCCIDR" } }
+        }],
+        "Tags": [
+          {
+            "Key" : "Name",
+            "Value" : "RDS-SecurityGroup"
+          }
+        ]
+      }
+    },
+    "DBSubnetGroup" : {
+      "Type" : "AWS::RDS::DBSubnetGroup",
+      "Properties" : {
+         "DBSubnetGroupDescription" : "Subnets where DB will be available",
+         "SubnetIds" : [
+           { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PrivateSubnetID-1" } },
+           { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PrivateSubnetID-2" } },
+           { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PrivateSubnetID-3" } }
+         ]
+      }
+    },
+
+    "DBInstance" : {
+      "Type" : "AWS::RDS::DBInstance",
+      "Properties" : {
+        "DBName" : { "Ref" : "DBName" },
+        "MasterUsername" : { "Ref" : "DBUsername" } ,
+        "MasterUserPassword" : { "Ref" : "DBPassword" },
+        "DBInstanceIdentifier" : {"Ref" : "DBName"},
+        "AllocatedStorage" : { "Ref" : "DBAllocatedStorage" },
+        "DBInstanceClass" : { "Ref" : "DBInstanceClass" },
+        "PubliclyAccessible" : false,
+        "MultiAZ": false,
+        "Engine" : "postgres",
+        "DBSubnetGroupName" : { "Ref" : "DBSubnetGroup" },
+        "BackupRetentionPeriod": 0,
+        "VPCSecurityGroups" : [ { "Ref" : "DBSecurityGroup" } ]
+      }
+    }
+  },
+  "Outputs" : {
+    "DBEndpoint" : {
+      "Description" : "RDS host endpoint",
+      "Value" :  { "Fn::GetAtt" : [ "DBInstance", "Endpoint.Address" ] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-DBendpoint" }}
+    },
+    "DBPort" : {
+      "Description" : "RDS host port",
+      "Value" :  { "Fn::GetAtt" : [ "DBInstance", "Endpoint.Port" ] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-DBport" }}
+    }
+  }
+}
