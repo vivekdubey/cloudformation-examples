@@ -1,0 +1,192 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Template to setup load balanced sample app in a VPC",
+  "Parameters": {
+    "VPCStackName": {
+      "Description": "Stack Name to get VPC related info",
+      "Type": "String",
+      "Default": "sample-vpc"
+    },
+    "ImageId": {
+      "Description": "AMI Id for EC2 instance",
+      "Type": "String",
+      "Default": "ami-e94e5e8a"
+    },
+    "InstanceType": {
+      "Description": "EC2 instance family",
+      "Type": "String",
+      "Default": "t2.micro"
+    },
+    "SSHKeyName": {
+      "Description": "SSH key name for login to EC2 instance",
+      "Type": "String",
+      "Default": "test"
+    }
+  },
+  "Resources": {
+    "EC2SecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable access to the EC2 instance with application",
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIp": { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCCIDR" } }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIp": { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCCIDR" } }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCCIDR" } }
+          }
+        ],
+        "Tags": [
+          {
+            "Key" : "Name",
+            "Value" : "EC2-SecurityGroup"
+          }
+        ],
+        "VpcId": { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCID" } }
+      }
+    },
+    "ELBSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable access to the ELB ",
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCCIDR" } }
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [
+          {
+            "Key" : "Name",
+            "Value" : "ELB-SecurityGroup"
+          }
+        ],
+        "VpcId": { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCID" } }
+      }
+    },
+    "ELB": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "SecurityGroups": [{"Ref": "ELBSecurityGroup"}],
+        "CrossZone": true,
+        "ConnectionDrainingPolicy": {
+          "Enabled": true,
+          "Timeout": 60
+        },
+        "ConnectionSettings": {
+          "IdleTimeout" : 30
+        },
+        "Subnets": [
+          { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PublicSubnetID-1" } },
+          { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PublicSubnetID-2" } },
+          { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PublicSubnetID-3" } }
+        ],
+        "Listeners": [
+          {
+            "LoadBalancerPort": "443",
+            "InstancePort": "80",
+            "Protocol": "HTTPS",
+            "SSLCertificateId": {},
+          }
+        ],
+        "HealthCheck": {
+          "Target": "TCP:80",
+          "HealthyThreshold": "3",
+          "UnhealthyThreshold": "5",
+          "Interval": "5",
+          "Timeout": "3"
+        },
+        "LoadBalancerName": "AppELB"
+      }
+    },
+    "AppLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "AssociatePublicIpAddress": true,
+        "ImageId": {"Ref" : "ImageId"},
+        "InstanceType": {"Ref" : "InstanceType"},
+        "KeyName": {"Ref": "SSHKeyName"},
+        "SecurityGroups": [ {"Ref": "EC2SecurityGroup"}],
+      }
+    },
+    "AppCluster": {
+      "UpdatePolicy": {
+        "AutoScalingReplacingUpdate": {
+          "WillReplace": true,
+          "MinInstancesInService": 1
+        }
+      },
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Count": 1,
+          "Timeout": "PT10M5S"
+        }
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "Cooldown": "60",
+        "TerminationPolicies": [ "ClosestToNextInstanceHour", "Default" ],
+        "VPCZoneIdentifier": [
+          { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PrivateSubnetID-1" } },
+          { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PrivateSubnetID-2" } },
+          { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PrivateSubnetID-3" } }
+        ],
+        "LaunchConfigurationName": {"Ref": "AppLaunchConfig"},
+        "MinSize": 1,
+        "MaxSize": 3,
+        "HealthCheckGracePeriod": 30,
+        "HealthCheckType": "EC2",
+        "LoadBalancerNames": [ {"Ref": "ELB"} ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "SampleApp",
+            "PropagateAtLaunch": "true"
+          }
+        ]
+      }
+    }
+  }
+}
