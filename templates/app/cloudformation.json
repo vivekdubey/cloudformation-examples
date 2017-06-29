@@ -7,6 +7,11 @@
       "Type": "String",
       "Default": "sample-vpc"
     },
+    "IAMRoleStackName":{
+      "Description": "Stack Name to get VPC related info",
+      "Type": "String",
+      "Default": "sample-iam"
+    },
     "ImageId": {
       "Description": "AMI Id for EC2 instance",
       "Type": "String",
@@ -21,6 +26,11 @@
       "Description": "SSH key name for login to EC2 instance",
       "Type": "String",
       "Default": "test"
+    },
+    "S3Bucket":{
+      "Description": "S3 Bucket to fetch packages and files related to application",
+      "Type": "String",
+      "Default": "redtoblack"
     }
   },
   "Resources": {
@@ -148,7 +158,25 @@
         "ImageId": {"Ref" : "ImageId"},
         "InstanceType": {"Ref" : "InstanceType"},
         "KeyName": {"Ref": "SSHKeyName"},
+        "IamInstanceProfile": { "Fn::ImportValue" :  {"Fn::Sub": "${IAMRoleStackName}-S3ReadonlyEC2InstanceProfile" } },
         "SecurityGroups": [ {"Ref": "EC2SecurityGroup"}],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -v\n",
+                "apt-get install nginx"
+                "/opt/aws/bin/cfn-init -s ", { "Ref": "AWS::StackId"},
+                " -r AppLaunchConfig  --region ", {"Ref": "AWS::Region"},
+                "\"\n",
+                "/opt/aws/bin/cfn-signal -e 1 ", { "Ref": "AWS::StackId"},
+                " --resource AppCluster  --region ", {"Ref": "AWS::Region"},
+              ]
+            ]
+          }
+        }
+      }
       }
     },
     "AppCluster": {
