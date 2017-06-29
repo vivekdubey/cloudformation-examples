@@ -10,7 +10,7 @@
     "IAMRoleStackName":{
       "Description": "Stack Name to get VPC related info",
       "Type": "String",
-      "Default": "s3readonly-iamm"
+      "Default": "s3readonly-iam"
     },
     "ImageId": {
       "Description": "AMI Id for EC2 instance",
@@ -138,7 +138,7 @@
             "LoadBalancerPort": "443",
             "InstancePort": "80",
             "Protocol": "HTTPS",
-            "SSLCertificateId": {},
+            "SSLCertificateId": "arn:aws:iam::082815275063:server-certificate/self.signed"
           }
         ],
         "HealthCheck": {
@@ -162,22 +162,21 @@
         "SecurityGroups": [ {"Ref": "EC2SecurityGroup"}],
         "UserData": {
           "Fn::Base64": {
-            "Fn::Join": [
-              "",
-              [
+            "Fn::Join": [ "", [
                 "#!/bin/bash -v\n",
-                "apt-get install nginx awscli -y\n"
-                "/opt/aws/bin/cfn-init -s ", { "Ref": "AWS::StackId"},
+                "service nginx restart\n",
+                "aws s3 cp s3://",{"Ref": "S3Bucket"},"/sample-application.tar.gz /mnt/\n",
+                "tar -xzf /mnt/sample-application.tar.gz -C /mnt/\n",
+                "/usr/local/bin/cfn-init -s ", { "Ref": "AWS::StackId"},
                 " -r AppLaunchConfig  --region ", {"Ref": "AWS::Region"},
                 "\"\n",
-                "/opt/aws/bin/cfn-signal -e 1 ", { "Ref": "AWS::StackId"},
+                "/usr/local/bin/cfn-signal -e 1 ", { "Ref": "AWS::StackId"},
                 " --resource AppCluster  --region ", {"Ref": "AWS::Region"},
-                "\"\n",
+                "\"\n"
               ]
             ]
           }
         }
-      }
       }
     },
     "AppCluster": {
