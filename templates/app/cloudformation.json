@@ -10,7 +10,7 @@
     "IAMRoleStackName":{
       "Description": "Stack Name to get VPC related info",
       "Type": "String",
-      "Default": "sample-iam"
+      "Default": "s3readonly-iamm"
     },
     "ImageId": {
       "Description": "AMI Id for EC2 instance",

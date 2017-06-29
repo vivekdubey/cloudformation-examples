@@ -4,34 +4,38 @@
   "Resources": {
     "InstanceRole":{
       "Type": "AWS::IAM::Role",
-      "AssumeRolePolicyDocument": {
-        "Version": "2012-10-17",
-        "Statement": [
-          {
-            "Effect": "Allow",
-            "Principal": { "Service": "ec2.amazonaws.com" },
-            "Action": [ "sts:AssumeRole" ]
-          }
-        ]
-      },
-      "Path": "/",
-      "Policies":{
-        "PolicyName" : "s3ReadAccess",
-        "PolicyDocument": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
-          "Statement": [ {
-            "Effect": "Allow",
-            "Action": [ "s3:GetObject", "s3:ListBucket"],
-            "Resource": ["*"],
-            "Sid": "S3ReadAccess"
-          } ]
-        }
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": [ "ec2.amazonaws.com" ] },
+              "Action": [ "sts:AssumeRole" ]
+            }
+          ]
+        },
+        "Path": "/",
+        "Policies":[{
+          "PolicyName" : "s3ReadAccess",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [ {
+              "Effect": "Allow",
+              "Action": [ "s3:GetObject", "s3:ListBucket"],
+              "Resource": ["*"],
+              "Sid": "S3ReadAccess"
+            } ]
+          }
+        }]
       }
     },
     "IamInstanceProfile":{
       "Type": "AWS::IAM::InstanceProfile",
-      "Path": "/",
-      "Roles": {"Ref" : {"InstanceRole"}}
+      "Properties":{
+        "Path": "/",
+        "Roles": [{"Ref" : "InstanceRole"}]
+      }
     }
   },
   "Outputs" : {
