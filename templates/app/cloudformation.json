@@ -180,10 +180,11 @@
                 "cp /mnt/sample-application/startup-scripts/monit-sample-app /etc/monit/conf.d/monit-sample-app\n",
                 "cp /mnt/sample-application/startup-scripts/startup.sh /mnt/sample-application/startup.sh\n",
                 "chmod +x /mnt/sample-application/startup.sh\n",
-                "service monit restart\n",
-                "service nginx restart\n",
                 "cd /mnt/sample-application && bundle install --path .bundle\n",
                 "echo export DATABASE_URL=",{"Ref":"DBConnectionString"},">/mnt/sample-application/env.sh\n",
+                "chown -R ubuntu:ubuntu /mnt/sample-application\n",
+                "service monit restart\n",
+                "service nginx restart\n",
                 "/usr/local/bin/cfn-signal -e 0 --stack ", { "Ref": "AWS::StackId"},
                 " --resource AppCluster  --region ", {"Ref": "AWS::Region"},"\n"
               ]
