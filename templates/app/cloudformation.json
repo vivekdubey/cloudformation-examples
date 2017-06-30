@@ -15,7 +15,7 @@
     "ImageId": {
       "Description": "AMI Id for EC2 instance",
       "Type": "String",
-      "Default": "ami-baf2e1d9"
+      "Default": "ami-7f9b881c"
     },
     "InstanceType": {
       "Description": "EC2 instance family",
@@ -31,7 +31,12 @@
       "Description": "S3 Bucket to fetch packages and files related to application",
       "Type": "String",
       "Default": "redtoblack"
-    }
+    },
+    "DBConnectionString": {
+      "NoEcho": "true",
+      "Description": "Connection string for DB connectivity",
+      "Type": "String"
+    },
   },
   "Resources": {
     "EC2SecurityGroup": {
@@ -41,8 +46,8 @@
         "SecurityGroupEgress": [
           {
             "IpProtocol": "tcp",
-            "FromPort": 22,
-            "ToPort": 22,
+            "FromPort": 5432,
+            "ToPort": 5432,
             "CidrIp": { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCCIDR" } }
           },
           {
@@ -139,6 +144,11 @@
             "InstancePort": "80",
             "Protocol": "HTTPS",
             "SSLCertificateId": "arn:aws:iam::082815275063:server-certificate/self.signed"
+          },
+          {
+            "LoadBalancerPort": "80",
+            "InstancePort": "80",
+            "Protocol": "HTTP"
           }
         ],
         "HealthCheck": {
@@ -164,10 +174,17 @@
           "Fn::Base64": {
             "Fn::Join": [ "", [
                 "#!/bin/bash -v\n",
-                "service nginx restart\n",
                 "aws s3 cp s3://",{"Ref": "S3Bucket"},"/sample-application.tar.gz /mnt/\n",
                 "tar -xzf /mnt/sample-application.tar.gz -C /mnt/\n",
-                "/usr/local/bin/cfn-signal -e 1 ", { "Ref": "AWS::StackId"},
+                "cp /mnt/sample-application/startup-scripts/nginx.conf /etc/nginx/nginx.conf\n",
+                "cp /mnt/sample-application/startup-scripts/monit-sample-app /etc/monit/conf.d/monit-sample-app\n",
+                "cp /mnt/sample-application/startup-scripts/startup.sh /mnt/sample-application/startup.sh\n",
+                "chmod +x /mnt/sample-application/startup.sh\n",
+                "service monit restart\n",
+                "service nginx restart\n",
+                "cd /mnt/sample-application && bundle install --path .bundle\n",
+                "echo export DATABASE_URL=",{"Ref":"DBConnectionString"},">/mnt/sample-application/env.sh\n",
+                "/usr/local/bin/cfn-signal -e 0 --stack ", { "Ref": "AWS::StackId"},
                 " --resource AppCluster  --region ", {"Ref": "AWS::Region"},"\n"
               ]
             ]
@@ -178,8 +195,7 @@
     "AppCluster": {
       "UpdatePolicy": {
         "AutoScalingReplacingUpdate": {
-          "WillReplace": true,
-          "MinInstancesInService": 1
+          "WillReplace": true
         }
       },
       "CreationPolicy": {
