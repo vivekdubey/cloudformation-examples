@@ -15,7 +15,7 @@
     "ImageId": {
       "Description": "AMI Id for EC2 instance",
       "Type": "String",
-      "Default": "ami-e94e5e8a"
+      "Default": "ami-baf2e1d9"
     },
     "InstanceType": {
       "Description": "EC2 instance family",
@@ -154,7 +154,7 @@
     "AppLaunchConfig": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
-        "AssociatePublicIpAddress": true,
+        "AssociatePublicIpAddress": false,
         "ImageId": {"Ref" : "ImageId"},
         "InstanceType": {"Ref" : "InstanceType"},
         "KeyName": {"Ref": "SSHKeyName"},
@@ -167,12 +167,8 @@
                 "service nginx restart\n",
                 "aws s3 cp s3://",{"Ref": "S3Bucket"},"/sample-application.tar.gz /mnt/\n",
                 "tar -xzf /mnt/sample-application.tar.gz -C /mnt/\n",
-                "/usr/local/bin/cfn-init -s ", { "Ref": "AWS::StackId"},
-                " -r AppLaunchConfig  --region ", {"Ref": "AWS::Region"},
-                "\"\n",
                 "/usr/local/bin/cfn-signal -e 1 ", { "Ref": "AWS::StackId"},
-                " --resource AppCluster  --region ", {"Ref": "AWS::Region"},
-                "\"\n"
+                " --resource AppCluster  --region ", {"Ref": "AWS::Region"},"\n"
               ]
             ]
           }
