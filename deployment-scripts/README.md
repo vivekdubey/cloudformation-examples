@@ -22,7 +22,7 @@ bundle exec rake deploy:rds[<aws_profile_name>,<region>,<stack-name>,<relative t
 # Example: bundle exec rake deploy:rds[aws_profile,ap-southeast-2,sample-rds,../templates/rds/cloudformation.json,'<username.\,<password>\,<dbname>']
 ```
 
-## Extra commands:
+## List all rake tasks:
 ```
 cd deployment-scripts
 bundle install --path .bundle
