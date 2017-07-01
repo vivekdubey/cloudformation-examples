@@ -10,7 +10,7 @@
     "ImageId": {
       "Description": "AMI Id for EC2 instance",
       "Type": "String",
-      "Default": "ami-e94e5e8a"
+      "Default": "ami-7f9b881c"
     },
     "InstanceType": {
       "Description": "EC2 instance family",

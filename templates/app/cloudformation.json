@@ -12,6 +12,11 @@
       "Type": "String",
       "Default": "s3readonly-iam"
     },
+    "DBStackName":{
+      "Description": "Stack Name to get DB information",
+      "Type": "String",
+      "Default": "sample-rds"
+    },
     "ImageId": {
       "Description": "AMI Id for EC2 instance",
       "Type": "String",
@@ -32,11 +37,11 @@
       "Type": "String",
       "Default": "redtoblack"
     },
-    "DBConnectionString": {
+    "DBCredentials": {
       "NoEcho": "true",
-      "Description": "Connection string for DB connectivity",
-      "Type": "String"
-    },
+      "Description": "Comma separated username,password,database name",
+      "Type": "CommaDelimitedList"
+    }
   },
   "Resources": {
     "EC2SecurityGroup": {
@@ -46,8 +51,8 @@
         "SecurityGroupEgress": [
           {
             "IpProtocol": "tcp",
-            "FromPort": 5432,
-            "ToPort": 5432,
+            "FromPort": { "Fn::ImportValue" :  {"Fn::Sub": "${DBStackName}-DBport" } },
+            "ToPort": { "Fn::ImportValue" :  {"Fn::Sub": "${DBStackName}-DBport" } },
             "CidrIp": { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-VPCCIDR" } }
           },
           {
@@ -181,8 +186,17 @@
                 "cp /mnt/sample-application/startup-scripts/startup.sh /mnt/sample-application/startup.sh\n",
                 "chmod +x /mnt/sample-application/startup.sh\n",
                 "cd /mnt/sample-application && bundle install --path .bundle\n",
-                "echo export DATABASE_URL=",{"Ref":"DBConnectionString"},">/mnt/sample-application/env.sh\n",
+                { "Fn::Sub": [
+                  "echo export DATABASE_URL=postgres://${Username}:${Password}@${DBendpoint}:${DBPort}/${DBName} >/mnt/sample-application/env.sh\n", {
+                    "Username":  { "Fn::Select" : [ "0", {"Ref" : "DBCredentials"} ] },
+                    "Password": { "Fn::Select" : [ "1", {"Ref" : "DBCredentials"} ] },
+                    "DBendpoint":{ "Fn::ImportValue" :  {"Fn::Sub": "${DBStackName}-DBendpoint" } },
+                    "DBPort": { "Fn::ImportValue" :  {"Fn::Sub": "${DBStackName}-DBport" } },
+                    "DBName": { "Fn::Select" : [ "2", {"Ref" : "DBCredentials"} ] }
+                  }
+                ]},
                 "chown -R ubuntu:ubuntu /mnt/sample-application\n",
+                "/mnt/sample-application/startup.sh start\n",
                 "service monit restart\n",
                 "service nginx restart\n",
                 "/usr/local/bin/cfn-signal -e 0 --stack ", { "Ref": "AWS::StackId"},
@@ -215,7 +229,7 @@
           { "Fn::ImportValue" :  {"Fn::Sub": "${VPCStackName}-PrivateSubnetID-3" } }
         ],
         "LaunchConfigurationName": {"Ref": "AppLaunchConfig"},
-        "MinSize": 1,
+        "MinSize": 2,
         "MaxSize": 3,
         "HealthCheckGracePeriod": 30,
         "HealthCheckType": "EC2",

@@ -1,3 +1,3 @@
 check process sample with pidfile /mnt/sample-application/app.pid
-	start program = "/mnt/sample-application/startup-scripts/startup.sh start"
-	stop program = "/mnt/sample-application/startup-scripts/startup.sh stop"
+	start program = "/mnt/sample-application/startup.sh start"
+	stop program = "/mnt/sample-application/startup.sh stop"

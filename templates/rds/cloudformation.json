@@ -7,21 +7,10 @@
       "Type": "String",
       "Default": "sample-vpc"
     },
-    "DBName": {
-      "Default": "development",
-      "Description" : "The database name",
-      "Type": "String"
-    },
-    "DBUsername": {
-      "Default": "development",
+    "DBCredentials": {
       "NoEcho": "true",
-      "Description" : "The database admin account username",
-      "Type": "String"
-    },
-    "DBPassword": {
-      "NoEcho": "true",
-      "Description" : "The database admin account password",
-      "Type": "String"
+      "Description": "Comma separated username,password,database name",
+      "Type": "CommaDelimitedList"
     },
     "DBInstanceClass" : {
       "Default" : "db.t2.micro",
@@ -75,10 +64,10 @@
     "DBInstance" : {
       "Type" : "AWS::RDS::DBInstance",
       "Properties" : {
-        "DBName" : { "Ref" : "DBName" },
-        "MasterUsername" : { "Ref" : "DBUsername" } ,
-        "MasterUserPassword" : { "Ref" : "DBPassword" },
-        "DBInstanceIdentifier" : {"Ref" : "DBName"},
+        "MasterUsername" : { "Fn::Select" : [ "0", {"Ref" : "DBCredentials"} ] } ,
+        "MasterUserPassword" : { "Fn::Select" : [ "1", {"Ref" : "DBCredentials"} ] },
+        "DBName" : { "Fn::Select" : [ "2", {"Ref" : "DBCredentials"} ] },
+        "DBInstanceIdentifier" : { "Fn::Select" : [ "2", {"Ref" : "DBCredentials"} ] },
         "AllocatedStorage" : { "Ref" : "DBAllocatedStorage" },
         "DBInstanceClass" : { "Ref" : "DBInstanceClass" },
         "PubliclyAccessible" : false,

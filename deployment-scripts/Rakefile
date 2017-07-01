@@ -1,9 +1,28 @@
 require 'rake'
-require 'cloudformation_stack'
-# bundle exec rake deploy:vpc[personal,ap-southeast-2,sample-vpc,../templates/vpc/cloudformation.json]
+require_relative 'helper/rake'
 namespace :deploy do
-  desc 'Deploy cloudformation stack'
+  desc 'Deploy VPC cloudformation stack'
+  # bundle exec rake deploy:vpc[aws_profile,ap-southeast-2,sample-vpc,../templates/vpc/cloudformation-withNatGateway.json]
   task :vpc, [:aws_profile, :region, :stack_name, :cf_template] do |t, args|
+    disable_rollback =  true
+    timeout =  1800
+    credentials = {
+      mode: 'aws_profile',
+      profile_name: args[:aws_profile]
+    }
+    deployment_params = {
+      stack_name: args[:stack_name],
+      template_body: File.read(args[:cf_template]),
+      template_params: {},
+      disable_rollback: disable_rollback,
+      timeout: timeout
+    }
+    deploy(deployment_params,credentials, args[:region])
+  end
+
+  desc 'Deploy RDS cloudformation stack'
+  # bundle exec rake deploy:rds[personal,ap-southeast-2,sample-rds,../templates/rds/cloudformation.json,'username\,password\,database name']
+  task :rds, [:aws_profile, :region, :stack_name, :cf_template, :db_credentials] do |t, args|
     disable_rollback =  true
     timeout =  1800
     File.read(args[:cf_template])
@@ -11,7 +30,36 @@ namespace :deploy do
       mode: 'aws_profile',
       profile_name: args[:aws_profile]
     }
-    cf_stack = CFStackService.new(args[:stack_name],File.read(args[:cf_template]),{},credentials, args[:region])
-    cf_stack.deploy(disable_rollback, timeout)
+    deployment_params = {
+      stack_name: args[:stack_name],
+      template_body: File.read(args[:cf_template]),
+      template_params: { DBCredentials: args[:db_credentials] },
+      disable_rollback: disable_rollback,
+      timeout: timeout
+    }
+    deploy(deployment_params,credentials, args[:region])
+  end
+
+  desc 'Deploy app cloudformation stack'
+  # bundle exec rake deploy:app[aws_profile,ap-southeast-2,sample-app,../templates/app/cloudformation.json,ami_id,'username\,password\,dbname']
+  task :app, [:aws_profile, :region, :stack_name, :cf_template, :ami_id, :db_credentials] do |t, args|
+    disable_rollback =  true
+    timeout =  1800
+    File.read(args[:cf_template])
+    credentials = {
+      mode: 'aws_profile',
+      profile_name: args[:aws_profile]
+    }
+    deployment_params = {
+      stack_name: args[:stack_name],
+      template_body: File.read(args[:cf_template]),
+      template_params: {
+        DBCredentials: args[:db_credentials],
+        ImageId: args[:ami_id]
+      },
+      disable_rollback: disable_rollback,
+      timeout: timeout
+    }
+    deploy(deployment_params,credentials, args[:region])
   end
 end
