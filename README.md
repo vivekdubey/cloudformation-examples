@@ -17,4 +17,4 @@ Examples of different cloudformation templates to deploy various resources in AW
 ### Commands to deploy sample cloudformation templates 
 - Deploying cloudformation stack using the gem mentioned above is done through rake tasks.
 - There are multiple rack tasks for different cloudformation stacks.
-- Details of rake tasks are mentioned in `./deployment-scripts` 
+- [Details of rake tasks are mentioned in](https://github.com/vivekdubey/cloudformation-examples/tree/master/deployment-scripts) `./deployment-scripts` 
