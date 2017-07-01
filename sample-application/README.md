@@ -4,6 +4,11 @@
 - It shows the number of requests served by the instance hosting application. 
 - In a load balanced environment pressing refresh button shows requests served by a single instance. 
 - To see actual behaviour in load balanced environment page refresh is required. 
+## Features of sample application
+- Displays total number of page views.
+- ID of the instance serving the request.
+- Number of requests served per instance of the application. 
+- Count of each requests is stored in postgresql database. 
 ## Scripts:
 - `startup-scripts/startup.sh` is starts and stops the application. 
 - `startup-scripts/monit-sample-app` is a monit config file to monitor the startup script. 
