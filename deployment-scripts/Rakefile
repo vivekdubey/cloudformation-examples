@@ -1,9 +1,9 @@
 require 'rake'
 require_relative 'helper/rake'
 namespace :deploy do
-  desc 'Deploy VPC cloudformation stack'
-  # bundle exec rake deploy:vpc[aws_profile,ap-southeast-2,sample-vpc,../templates/vpc/cloudformation-withNatGateway.json]
-  task :vpc, [:aws_profile, :region, :stack_name, :cf_template] do |t, args|
+  desc 'Deploy cloudformation stack with no run time parameters'
+  # bundle exec rake deploy:default[aws_profile,ap-southeast-2,sample-vpc,../templates/vpc/cloudformation-withNatGateway.json]
+  task :default, [:aws_profile, :region, :stack_name, :cf_template] do |t, args|
     disable_rollback =  true
     timeout =  1800
     credentials = {
