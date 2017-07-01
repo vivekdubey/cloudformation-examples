@@ -1,5 +1,5 @@
 # cloudformation-examples
-Examples of different cloudformation templates to deploy various resources in AWS using a rubygem created in a different repository. Rubygems - https://github.com/vivekdubey/cloudformation_stack.
+Examples of different cloudformation templates to deploy various resources in AWS using a rubygem created in a different repository. Rubygems - https://github.com/vivekdubey/cloudformation_stack. `branch: v4, will be merged soon to master`
 ### Steps involved in deploying the application
 - Creation of VPC with private and public subnet. 
 - Creation of a DB instance. 
